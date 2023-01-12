@@ -25,6 +25,7 @@ export default class App extends React.Component {
       .catch(() => {
         this.setState({
           error: true,
+          loading: false,
         });
       });
   }
