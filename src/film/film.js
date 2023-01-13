@@ -23,7 +23,7 @@ function Film(props) {
           <span className="filmCard__genre">Action</span>
           <span className="filmCard__genre">Drama</span>
         </div>
-        <div className="filmCard__overview">{cutOverview(`${overview}`, 210)}</div>
+        <div className="filmCard__overview">{cutOverview(`${overview}`, 170)}</div>
       </div>
     </div>
   );

@@ -8,10 +8,6 @@ export default class SearchBar extends React.Component {
   };
 
   searchFilm = (e) => {
-    // const {
-    //   onSearchChange = () => {
-    //   },
-    // } = this.props;
     this.setState({
       value: e.target.value,
     });

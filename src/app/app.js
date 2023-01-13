@@ -5,8 +5,6 @@ import FilmList from '../film-list';
 import './app.css';
 import LoadingIndicator from '../loading-indicator';
 import ErrorMessage from '../error-message';
-import SearchBar from '../search-bar';
-import { Pagination } from 'antd';
 import { debounce } from 'lodash';
 
 export default class App extends React.Component {
@@ -16,7 +14,6 @@ export default class App extends React.Component {
 
   state = {
     totalPages: 1,
-    currentPage: 1,
     films: [],
     search: 'return',
     loading: true,
@@ -27,7 +24,7 @@ export default class App extends React.Component {
     this.requestFilms();
   }
 
-  requestFilms = (page) => {
+  requestFilms = (page = 1) => {
     this.moviedb
       .getAllFilms(this.state.search, page)
       .then((res) => {
@@ -45,17 +42,7 @@ export default class App extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (this.state.search === '') return;
-    if (this.state.search !== prevState.search) {
-      this.moviedb
-        .getAllFilms(this.state.search)
-        .then(this.onLoadFilms)
-        .catch(() => {
-          this.setState({
-            error: true,
-            loading: false,
-          });
-        });
-    }
+    if (this.state.search !== prevState.search) this.requestFilms();
   }
 
   onLoadFilms = (allFilms) => {
@@ -89,25 +76,23 @@ export default class App extends React.Component {
   render() {
     const loading = this.state.loading ? <LoadingIndicator /> : null;
     const filmList = !this.state.loading ? (
-      <FilmList filmsData={this.state.films} posterBase={this.moviedb._posterBase} />
+      <FilmList
+        filmsData={this.state.films}
+        posterBase={this.moviedb._posterBase}
+        total={this.state.totalPages * 20}
+        onPageChange={this.requestFilms}
+        onSearchChange={this.onSearchChange}
+      />
     ) : null;
     const error = this.state.error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
     const offline = !window.navigator.onLine ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
 
     return (
       <section className="movieApp">
-        <SearchBar onSearchChange={this.onSearchChange} />
         {loading}
         {error}
         {offline}
         {filmList}
-        <Pagination
-          total={this.state.totalPages}
-          onChange={(value) =>
-            // this.setState({ currentPage: value })
-            this.requestFilms(value)
-          }
-        />
       </section>
     );
   }

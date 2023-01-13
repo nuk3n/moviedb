@@ -1,8 +1,12 @@
-// import { Pagination } from 'antd';
-// import './pagination.css';
-//
-// function PagePagination() {
-//   return <Pagination defaultCurrent={1} total={50} />;
-// }
-//
-// export default PagePagination;
+/* eslint-disable */
+import { Pagination } from 'antd';
+import './pagination.css';
+import React from 'react';
+
+function PagePagination({ total, onPageChange }) {
+  return (
+    <Pagination total={total} defaultPageSize={20} showSizeChanger={false} onChange={(value) => onPageChange(value)} />
+  );
+}
+
+export default PagePagination;
