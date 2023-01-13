@@ -11,13 +11,9 @@ export default class MovieService {
     return await res.json();
   }
 
-  async getAllFilms(search) {
-    const res = await this.getResource(`&query=${search}`);
-    return res.results;
-  }
-
-  async getFilmBySearch(search, idx) {
-    const films = await this.getAllFilms(search);
-    return films[idx];
+  async getAllFilms(search, page = 1) {
+    const res = await this.getResource(`&query=${search}&page=${page}`);
+    return res;
+    // .results;
   }
 }

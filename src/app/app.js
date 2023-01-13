@@ -5,6 +5,9 @@ import FilmList from '../film-list';
 import './app.css';
 import LoadingIndicator from '../loading-indicator';
 import ErrorMessage from '../error-message';
+import SearchBar from '../search-bar';
+import { Pagination } from 'antd';
+import { debounce } from 'lodash';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
@@ -12,15 +15,25 @@ export default class App extends React.Component {
   nextFilmID = 1;
 
   state = {
+    totalPages: 1,
+    currentPage: 1,
     films: [],
+    search: 'return',
     loading: true,
     error: false,
   };
 
-  constructor() {
-    super();
+  componentDidMount() {
+    this.requestFilms();
+  }
+
+  requestFilms = (page) => {
     this.moviedb
-      .getAllFilms('result')
+      .getAllFilms(this.state.search, page)
+      .then((res) => {
+        this.setState({ totalPages: res.total_pages });
+        return res.results;
+      })
       .then(this.onLoadFilms)
       .catch(() => {
         this.setState({
@@ -28,13 +41,29 @@ export default class App extends React.Component {
           loading: false,
         });
       });
+  };
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.search === '') return;
+    if (this.state.search !== prevState.search) {
+      this.moviedb
+        .getAllFilms(this.state.search)
+        .then(this.onLoadFilms)
+        .catch(() => {
+          this.setState({
+            error: true,
+            loading: false,
+          });
+        });
+    }
   }
 
   onLoadFilms = (allFilms) => {
-    const filmsPage = allFilms.slice(0, 6);
-    filmsPage.forEach((film) => {
+    this.setState({ loading: true });
+    let newData = [];
+    allFilms.forEach((film) => {
       this.setState(({ films }) => {
-        let newData = [...films, this.createFilmData(film)];
+        newData = [...newData, this.createFilmData(film)];
         return {
           films: newData,
           loading: false,
@@ -42,6 +71,10 @@ export default class App extends React.Component {
       });
     });
   };
+
+  onSearchChange = debounce((input) => {
+    this.setState({ search: input });
+  }, 500);
 
   createFilmData(film) {
     return {
@@ -63,10 +96,18 @@ export default class App extends React.Component {
 
     return (
       <section className="movieApp">
+        <SearchBar onSearchChange={this.onSearchChange} />
         {loading}
         {error}
         {offline}
         {filmList}
+        <Pagination
+          total={this.state.totalPages}
+          onChange={(value) =>
+            // this.setState({ currentPage: value })
+            this.requestFilms(value)
+          }
+        />
       </section>
     );
   }
