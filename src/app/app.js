@@ -38,7 +38,7 @@ export default class App extends React.Component {
       .catch(() => this.stateError());
   };
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.state.search === '') return;
     if (this.state.search !== prevState.search) this.requestFilms();
   }
@@ -47,13 +47,11 @@ export default class App extends React.Component {
     this.setState({ loading: true });
     let newData = [];
     allFilms.forEach((film) => {
-      this.setState(({ films }) => {
-        newData = [...newData, this.createFilmData(film)];
-        return {
-          films: newData,
-          loading: false,
-        };
-      });
+      newData = [...newData, this.createFilmData(film)];
+    });
+    this.setState({
+      films: newData,
+      loading: false,
     });
   };
 
@@ -86,24 +84,21 @@ export default class App extends React.Component {
   };
 
   render() {
-    const pageIsReady = !(this.state.loading || this.state.error || !this.state.connection);
+    const { films, loading, error, connection, totalPages } = this.state;
+    const pageIsReady = !(loading || error || !connection);
 
-    const loading = this.state.loading ? <LoadingIndicator /> : null;
-    const filmList = pageIsReady ? (
-      <FilmList filmsData={this.state.films} posterBase={this.moviedb._posterBase} />
-    ) : null;
-    const error = this.state.error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
-    const offline = !this.state.connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
     const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} /> : null;
-    const pagination = pageIsReady ? (
-      <PagePagination total={this.state.totalPages * 20} onPageChange={this.requestFilms} />
-    ) : null;
+    const loadingIndicator = loading ? <LoadingIndicator /> : null;
+    const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
+    const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
+    const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb._posterBase} /> : null;
+    const pagination = pageIsReady ? <PagePagination total={totalPages * 20} onPageChange={this.requestFilms} /> : null;
 
     return (
       <section className="movieApp">
         {search}
-        {loading}
-        {error}
+        {loadingIndicator}
+        {errorMessage}
         {offline}
         {filmList}
         {pagination}
