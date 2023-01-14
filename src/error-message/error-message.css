@@ -1,5 +1,4 @@
 .ant-space {
-  position: absolute;
-  top: 45%;
-  left: 45%;
+  align-self: center;
+  margin: 0 auto;
 }

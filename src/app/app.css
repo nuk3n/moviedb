@@ -3,4 +3,8 @@
   width: 1010px;
   height: 1147px;
   background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
 }
