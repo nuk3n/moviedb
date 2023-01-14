@@ -8,6 +8,7 @@ import ErrorMessage from '../error-message';
 import { debounce } from 'lodash';
 import SearchBar from '../search-bar';
 import PagePagination from '../pagination';
+import EmptySearchWarning from '../empty-search-warning';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
@@ -18,6 +19,7 @@ export default class App extends React.Component {
     totalPages: 1,
     films: [],
     search: 'return',
+    noResults: false,
     loading: true,
     error: false,
     connection: true,
@@ -44,13 +46,16 @@ export default class App extends React.Component {
   }
 
   onLoadFilms = (allFilms) => {
-    this.setState({ loading: true });
+    this.setState({ loading: true, noResults: false });
+    if (allFilms.length === 0) {
+      this.setState({ noResults: true });
+    }
     let newData = [];
     allFilms.forEach((film) => {
       newData = [...newData, this.createFilmData(film)];
+      this.setState({ films: newData });
     });
     this.setState({
-      films: newData,
       loading: false,
     });
   };
@@ -84,10 +89,11 @@ export default class App extends React.Component {
   };
 
   render() {
-    const { films, loading, error, connection, totalPages } = this.state;
+    const { films, loading, error, connection, totalPages, noResults } = this.state;
     const pageIsReady = !(loading || error || !connection);
 
-    const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} /> : null;
+    const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} results={noResults} /> : null;
+    const emptySearchWarning = noResults ? <EmptySearchWarning /> : null;
     const loadingIndicator = loading ? <LoadingIndicator /> : null;
     const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
     const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
@@ -97,6 +103,7 @@ export default class App extends React.Component {
     return (
       <section className="movieApp">
         {search}
+        {emptySearchWarning}
         {loadingIndicator}
         {errorMessage}
         {offline}
