@@ -8,7 +8,6 @@ import ErrorMessage from '../error-message';
 import { debounce } from 'lodash';
 import SearchBar from '../search-bar';
 import PagePagination from '../pagination';
-import EmptySearchWarning from '../empty-search-warning';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
@@ -93,17 +92,17 @@ export default class App extends React.Component {
     const pageIsReady = !(loading || error || !connection);
 
     const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} results={noResults} /> : null;
-    const emptySearchWarning = noResults ? <EmptySearchWarning /> : null;
     const loadingIndicator = loading ? <LoadingIndicator /> : null;
     const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
     const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
     const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb._posterBase} /> : null;
-    const pagination = pageIsReady ? <PagePagination total={totalPages * 20} onPageChange={this.requestFilms} /> : null;
+    const pagination = pageIsReady ? (
+      <PagePagination totalFilms={totalPages * 20} onPageChange={this.requestFilms} />
+    ) : null;
 
     return (
       <section className="movieApp">
         {search}
-        {emptySearchWarning}
         {loadingIndicator}
         {errorMessage}
         {offline}

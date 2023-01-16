@@ -3,9 +3,14 @@ import { Pagination } from 'antd';
 import './pagination.css';
 import React from 'react';
 
-function PagePagination({ total, onPageChange }) {
+function PagePagination({ totalFilms, onPageChange }) {
   return (
-    <Pagination total={total} defaultPageSize={20} showSizeChanger={false} onChange={(value) => onPageChange(value)} />
+    <Pagination
+      total={totalFilms}
+      defaultPageSize={20}
+      showSizeChanger={false}
+      onChange={(value) => onPageChange(value)}
+    />
   );
 }
 

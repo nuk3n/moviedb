@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import './search-bar.css';
+import EmptySearchWarning from '../empty-search-warning';
 
 export default class SearchBar extends React.Component {
   state = {
@@ -15,13 +16,18 @@ export default class SearchBar extends React.Component {
   };
 
   render() {
+    const emptySearchWarning = this.props.results ? <EmptySearchWarning /> : null;
+
     return (
-      <input
-        className="searchBar"
-        placeholder=" Type to search..."
-        value={this.state.value}
-        onChange={this.searchFilm}
-      />
+      <div className="searchBar">
+        <input
+          className="searchBar__input"
+          placeholder=" Type to search..."
+          value={this.state.value}
+          onChange={this.searchFilm}
+        />
+        {emptySearchWarning}
+      </div>
     );
   }
 }
