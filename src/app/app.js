@@ -8,24 +8,31 @@ import ErrorMessage from '../error-message';
 import { debounce } from 'lodash';
 import SearchBar from '../search-bar';
 import PagePagination from '../pagination';
+import TabsBar from '../tabs';
+import SearchTab from '../search-tab';
+import RatedTab from '../rated-tab';
+import { MoviedbProvider } from '../moviedb-context';
+import { Tabs } from 'antd';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
 
-  nextFilmID = 1;
-
   state = {
     totalPages: 1,
     films: [],
-    search: 'return',
+    ratedPages: 1,
+    ratedFilms: [],
+    search: 'welcome',
     noResults: false,
     loading: true,
     error: false,
     connection: true,
+    currentTab: 'search',
   };
 
-  componentDidMount() {
-    this.requestFilms();
+  async componentDidMount() {
+    await this.moviedb.startNewSession();
+    await this.requestFilms();
   }
 
   requestFilms = (page = 1) => {
@@ -39,20 +46,48 @@ export default class App extends React.Component {
       .catch(() => this.stateError());
   };
 
+  requestRatedFilms = (page = 1) => {
+    this.moviedb
+      .getRatedFilms(page)
+      .then((res) => {
+        this.setState({ ratedPages: res.total_pages });
+        return res.results;
+      })
+      .then(this.onLoadRatedFilms)
+      .catch(() => this.stateError());
+  };
+
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.state.search === '') return;
     if (this.state.search !== prevState.search) this.requestFilms();
+    if (this.state.currentTab === 'rated' && this.state.currentTab !== prevState.currentTab) this.requestRatedFilms();
+    if (this.state.currentTab === 'search' && this.state.currentTab !== prevState.currentTab) this.requestFilms();
   }
 
   onLoadFilms = (allFilms) => {
     this.setState({ loading: true, noResults: false });
     if (allFilms.length === 0) {
-      this.setState({ noResults: true });
+      return this.setState({ noResults: true, loading: false });
     }
     let newData = [];
     allFilms.forEach((film) => {
       newData = [...newData, this.createFilmData(film)];
-      this.setState({ films: newData });
+    });
+    if (this.state.ratedFilms.length !== 0) {
+      this.state.ratedFilms.forEach((ratedFilm) => {
+        newData.forEach((film, i) => (ratedFilm.id === film.id ? (newData[i] = { ...ratedFilm }) : film));
+      });
+    }
+    this.setState({ films: newData, loading: false });
+  };
+
+  onLoadRatedFilms = (ratedFilms) => {
+    this.setState({ loading: true });
+    // NO RATED FILMS???
+    let newData = [];
+    ratedFilms.forEach((film) => {
+      newData = [...newData, this.createFilmData(film)];
+      this.setState({ ratedFilms: newData });
     });
     this.setState({
       loading: false,
@@ -63,13 +98,20 @@ export default class App extends React.Component {
     this.setState({ search: input });
   }, 500);
 
+  onTabChange = (tab) => {
+    this.setState({ currentTab: tab });
+  };
+
   createFilmData(film) {
     return {
       title: film.title,
       date: film.release_date,
       poster: film.poster_path,
       overview: film.overview,
-      id: this.nextFilmID++,
+      id: film.id,
+      rating: film.rating,
+      avgRating: film.vote_average,
+      filmGenres: film.genre_ids,
     };
   }
 
@@ -88,27 +130,67 @@ export default class App extends React.Component {
   };
 
   render() {
-    const { films, loading, error, connection, totalPages, noResults } = this.state;
+    const { films, loading, error, connection, totalPages, noResults, currentTab, ratedFilms, ratedPages } = this.state;
     const pageIsReady = !(loading || error || !connection);
 
+    const tabs = pageIsReady ? <TabsBar onTabChange={this.onTabChange} currentTab={currentTab} /> : null;
     const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} results={noResults} /> : null;
     const loadingIndicator = loading ? <LoadingIndicator /> : null;
     const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
     const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
     const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb._posterBase} /> : null;
+    const ratedFilmsList = pageIsReady ? (
+      <FilmList filmsData={ratedFilms} posterBase={this.moviedb._posterBase} />
+    ) : null;
     const pagination = pageIsReady ? (
       <PagePagination totalFilms={totalPages * 20} onPageChange={this.requestFilms} />
     ) : null;
+    const ratedPagination = pageIsReady ? (
+      <PagePagination totalFilms={ratedPages * 20} onPageChange={this.requestRatedFilms} />
+    ) : null;
+
+    const items = [
+      {
+        key: 'search',
+        label: 'Search',
+        children: (
+          <SearchTab
+            search={search}
+            loadingIndicator={loadingIndicator}
+            errorMessage={errorMessage}
+            offline={offline}
+            filmList={filmList}
+            pagination={pagination}
+          />
+        ),
+      },
+      {
+        key: 'rated',
+        label: 'Rated',
+        children: (
+          <RatedTab
+            loadingIndicator={loadingIndicator}
+            errorMessage={errorMessage}
+            offline={offline}
+            ratedFilmsList={ratedFilmsList}
+            ratedPagination={ratedPagination}
+          />
+        ),
+      },
+    ];
 
     return (
-      <section className="movieApp">
-        {search}
-        {loadingIndicator}
-        {errorMessage}
-        {offline}
-        {filmList}
-        {pagination}
-      </section>
+      <MoviedbProvider value={this.moviedb}>
+        <section className="movieApp">
+          <Tabs
+            defaultActiveKey="search"
+            activeKey={currentTab}
+            onChange={(tab) => this.onTabChange(tab)}
+            items={items}
+            centered={true}
+          />
+        </section>
+      </MoviedbProvider>
     );
   }
 }

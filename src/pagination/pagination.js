@@ -6,6 +6,7 @@ import React from 'react';
 function PagePagination({ totalFilms, onPageChange }) {
   return (
     <Pagination
+      class="movie__pagination"
       total={totalFilms}
       defaultPageSize={20}
       showSizeChanger={false}

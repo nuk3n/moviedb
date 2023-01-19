@@ -16,7 +16,7 @@ export default class SearchBar extends React.Component {
   };
 
   render() {
-    const emptySearchWarning = this.props.results ? <EmptySearchWarning /> : null;
+    const emptySearchWarning = this.props.results ? <EmptySearchWarning className="emptySearchWarning" /> : null;
 
     return (
       <div className="searchBar">
