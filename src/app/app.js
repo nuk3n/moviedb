@@ -3,12 +3,11 @@ import React from 'react';
 import MovieService from '../services/moviedb-service';
 import FilmList from '../film-list';
 import './app.css';
-import LoadingIndicator from '../loading-indicator';
+import { Spin } from 'antd';
 import ErrorMessage from '../error-message';
 import { debounce } from 'lodash';
 import SearchBar from '../search-bar';
 import PagePagination from '../pagination';
-import TabsBar from '../tabs';
 import SearchTab from '../search-tab';
 import RatedTab from '../rated-tab';
 import { MoviedbProvider } from '../moviedb-context';
@@ -133,14 +132,13 @@ export default class App extends React.Component {
     const { films, loading, error, connection, totalPages, noResults, currentTab, ratedFilms, ratedPages } = this.state;
     const pageIsReady = !(loading || error || !connection);
 
-    const tabs = pageIsReady ? <TabsBar onTabChange={this.onTabChange} currentTab={currentTab} /> : null;
     const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} results={noResults} /> : null;
-    const loadingIndicator = loading ? <LoadingIndicator /> : null;
+    const loadingIndicator = loading ? <Spin /> : null;
     const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
     const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
     const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb._posterBase} /> : null;
     const ratedFilmsList = pageIsReady ? (
-      <FilmList filmsData={ratedFilms} posterBase={this.moviedb._posterBase} />
+      <FilmList filmsData={ratedFilms} posterBase={this.moviedb._posterBase} loading={loading} />
     ) : null;
     const pagination = pageIsReady ? (
       <PagePagination totalFilms={totalPages * 20} onPageChange={this.requestFilms} />

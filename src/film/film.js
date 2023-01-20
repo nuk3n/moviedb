@@ -4,7 +4,8 @@ import { format } from 'date-fns';
 import RateBar from '../rate-bar';
 import FilmGenre from '../film-genre';
 import React from 'react';
-import LoadingIndicator from '../loading-indicator';
+
+import { Spin } from 'antd';
 
 export default class Film extends React.Component {
   state = {
@@ -26,7 +27,7 @@ export default class Film extends React.Component {
       filmData: { title, date, poster, overview, id, rating, avgRating, filmGenres },
       posterBase,
     } = this.props;
-    const loadingIndicator = this.state.loading ? <LoadingIndicator /> : null;
+    const { loading } = this.state;
     const colorBorder =
       avgRating < 3
         ? '#E90000'
@@ -44,8 +45,16 @@ export default class Film extends React.Component {
 
     return (
       <div className="filmCard">
-        {loadingIndicator}
-        <img className="filmCard__poster" src={`${posterBase}${poster}`} onLoad={this.onLoadPic} alt="film pic" />
+        <div className="filmCard__pic">
+          <Spin style={{ display: loading ? 'block' : 'none', alignSelf: 'center' }} />
+          <img
+            src={`${posterBase}${poster}`}
+            style={{ display: loading ? 'none' : 'block' }}
+            className="filmCard__poster"
+            onLoad={this.onLoadPic}
+            alt="film pic"
+          />
+        </div>
         <div className="filmCard__description">
           <div className="filmCard__header">
             <div className="filmCard__title">{title}</div>

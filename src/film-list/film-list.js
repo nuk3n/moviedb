@@ -2,7 +2,6 @@
 import Film from '../film';
 import React from 'react';
 import './film-list.css';
-import EmptySearchWarning from '../empty-search-warning';
 
 function FilmList({ filmsData, posterBase }) {
   const formatedFilmsList = filmsData.map((film) => {
