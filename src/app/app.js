@@ -12,6 +12,7 @@ import SearchTab from '../search-tab';
 import RatedTab from '../rated-tab';
 import { MoviedbProvider } from '../moviedb-context';
 import { Tabs } from 'antd';
+import ErrorBoundry from '../error-boundry';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
@@ -178,17 +179,19 @@ export default class App extends React.Component {
     ];
 
     return (
-      <MoviedbProvider value={this.moviedb}>
-        <section className="movieApp">
-          <Tabs
-            defaultActiveKey="search"
-            activeKey={currentTab}
-            onChange={(tab) => this.onTabChange(tab)}
-            items={items}
-            centered={true}
-          />
-        </section>
-      </MoviedbProvider>
+      <ErrorBoundry>
+        <MoviedbProvider value={this.moviedb}>
+          <section className="movieApp">
+            <Tabs
+              defaultActiveKey="search"
+              activeKey={currentTab}
+              onChange={(tab) => this.onTabChange(tab)}
+              items={items}
+              centered={true}
+            />
+          </section>
+        </MoviedbProvider>
+      </ErrorBoundry>
     );
   }
 }

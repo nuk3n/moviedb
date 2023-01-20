@@ -3,6 +3,7 @@ import './film.css';
 import { format } from 'date-fns';
 import RateBar from '../rate-bar';
 import FilmGenre from '../film-genre';
+import icon from './404-error.png';
 import React from 'react';
 
 import { Spin } from 'antd';
@@ -52,6 +53,7 @@ export default class Film extends React.Component {
             style={{ display: loading ? 'none' : 'block' }}
             className="filmCard__poster"
             onLoad={this.onLoadPic}
+            onError={(e) => (e.target.src = icon)}
             alt="film pic"
           />
         </div>
