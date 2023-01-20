@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { Alert, Space } from 'antd';
 import './error-message.css';
 

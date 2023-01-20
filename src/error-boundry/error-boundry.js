@@ -1,4 +1,3 @@
-/* eslint-disable */
 import ErrorMessage from '../error-message';
 import React from 'react';
 

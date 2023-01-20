@@ -1,7 +1,5 @@
-/* eslint-disable */
 import { Pagination } from 'antd';
 import './pagination.css';
-import React from 'react';
 
 function PagePagination({ totalFilms, onPageChange }) {
   return (

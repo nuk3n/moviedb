@@ -1,7 +1,6 @@
-/* eslint-disable */
+import EmptySearchWarning from '../empty-search-warning';
 import React from 'react';
 import './search-bar.css';
-import EmptySearchWarning from '../empty-search-warning';
 
 export default class SearchBar extends React.Component {
   state = {

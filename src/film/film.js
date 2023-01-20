@@ -1,9 +1,9 @@
-/* eslint-disable */
+/* eslint no-nested-ternary: "off" */
 import './film.css';
-import { format } from 'date-fns';
+import icon from './404-error.png';
 import RateBar from '../rate-bar';
 import FilmGenre from '../film-genre';
-import icon from './404-error.png';
+import { format } from 'date-fns';
 import React from 'react';
 
 import { Spin } from 'antd';
@@ -13,15 +13,16 @@ export default class Film extends React.Component {
     loading: true,
   };
 
-  cutOverview(text, maxLength) {
-    if (text.length < maxLength) return text;
-    let newText = text.slice(0, maxLength - 3);
-    return newText.slice(0, newText.lastIndexOf(' ')) + ' ...';
-  }
-
   onLoadPic = () => {
     this.setState({ loading: false });
   };
+
+  // eslint-disable-next-line class-methods-use-this
+  cutOverview(text, maxLength) {
+    if (text.length < maxLength) return text;
+    const newText = text.slice(0, maxLength - 3);
+    return `${newText.slice(0, newText.lastIndexOf(' '))} ...`;
+  }
 
   render() {
     const {
@@ -40,9 +41,7 @@ export default class Film extends React.Component {
         ? '#66E900'
         : null;
     const formatedDate = date ? format(new Date(date), 'MMMM d, yyyy') : null;
-    const formatedFilmGenres = filmGenres.map((id) => {
-      return <FilmGenre key={id} genreId={id} />;
-    });
+    const formatedFilmGenres = filmGenres.map((gId) => <FilmGenre key={gId} genreId={gId} />);
 
     return (
       <div className="filmCard">
@@ -53,6 +52,7 @@ export default class Film extends React.Component {
             style={{ display: loading ? 'none' : 'block' }}
             className="filmCard__poster"
             onLoad={this.onLoadPic}
+            /* eslint-disable-next-line no-return-assign */
             onError={(e) => (e.target.src = icon)}
             alt="film pic"
           />

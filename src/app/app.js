@@ -1,18 +1,16 @@
-/* eslint-disable */
-import React from 'react';
 import MovieService from '../services/moviedb-service';
 import FilmList from '../film-list';
 import './app.css';
-import { Spin } from 'antd';
 import ErrorMessage from '../error-message';
-import { debounce } from 'lodash';
 import SearchBar from '../search-bar';
 import PagePagination from '../pagination';
 import SearchTab from '../search-tab';
 import RatedTab from '../rated-tab';
 import { MoviedbProvider } from '../moviedb-context';
-import { Tabs } from 'antd';
 import ErrorBoundry from '../error-boundry';
+import { Tabs, Spin } from 'antd';
+import { debounce } from 'lodash';
+import React from 'react';
 
 export default class App extends React.Component {
   moviedb = new MovieService();
@@ -31,9 +29,54 @@ export default class App extends React.Component {
   };
 
   async componentDidMount() {
-    await this.moviedb.startNewSession();
+    try {
+      await this.moviedb.startNewSession();
+    } catch {
+      this.stateError();
+    }
     await this.requestFilms();
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.search === '') return;
+    if (this.state.search !== prevState.search) this.requestFilms();
+    if (this.state.currentTab === 'rated' && this.state.currentTab !== prevState.currentTab) this.requestRatedFilms();
+    if (this.state.currentTab === 'search' && this.state.currentTab !== prevState.currentTab) this.requestFilms();
+  }
+
+  onLoadFilms = (allFilms) => {
+    this.setState({ loading: true, noResults: false });
+    if (allFilms.length === 0) {
+      return this.setState({ noResults: true, loading: false });
+    }
+    let newData = [];
+    allFilms.forEach((film) => {
+      newData = [...newData, this.createFilmData(film)];
+    });
+    if (this.state.ratedFilms.length !== 0) {
+      this.state.ratedFilms.forEach((ratedFilm) => {
+        // eslint-disable-next-line no-return-assign
+        newData.forEach((film, i) => (ratedFilm.id === film.id ? (newData[i] = { ...ratedFilm }) : film));
+      });
+    }
+    this.setState({ films: newData, loading: false });
+  };
+
+  onLoadRatedFilms = (ratedFilms) => {
+    this.setState({ loading: true });
+    let newData = [];
+    ratedFilms.forEach((film) => {
+      newData = [...newData, this.createFilmData(film)];
+      this.setState({ ratedFilms: newData });
+    });
+    this.setState({
+      loading: false,
+    });
+  };
+
+  onSearchChange = debounce((input) => {
+    this.setState({ search: input });
+  }, 500);
 
   requestFilms = (page = 1) => {
     this.moviedb
@@ -57,63 +100,9 @@ export default class App extends React.Component {
       .catch(() => this.stateError());
   };
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.state.search === '') return;
-    if (this.state.search !== prevState.search) this.requestFilms();
-    if (this.state.currentTab === 'rated' && this.state.currentTab !== prevState.currentTab) this.requestRatedFilms();
-    if (this.state.currentTab === 'search' && this.state.currentTab !== prevState.currentTab) this.requestFilms();
-  }
-
-  onLoadFilms = (allFilms) => {
-    this.setState({ loading: true, noResults: false });
-    if (allFilms.length === 0) {
-      return this.setState({ noResults: true, loading: false });
-    }
-    let newData = [];
-    allFilms.forEach((film) => {
-      newData = [...newData, this.createFilmData(film)];
-    });
-    if (this.state.ratedFilms.length !== 0) {
-      this.state.ratedFilms.forEach((ratedFilm) => {
-        newData.forEach((film, i) => (ratedFilm.id === film.id ? (newData[i] = { ...ratedFilm }) : film));
-      });
-    }
-    this.setState({ films: newData, loading: false });
-  };
-
-  onLoadRatedFilms = (ratedFilms) => {
-    this.setState({ loading: true });
-    // NO RATED FILMS???
-    let newData = [];
-    ratedFilms.forEach((film) => {
-      newData = [...newData, this.createFilmData(film)];
-      this.setState({ ratedFilms: newData });
-    });
-    this.setState({
-      loading: false,
-    });
-  };
-
-  onSearchChange = debounce((input) => {
-    this.setState({ search: input });
-  }, 500);
-
   onTabChange = (tab) => {
     this.setState({ currentTab: tab });
   };
-
-  createFilmData(film) {
-    return {
-      title: film.title,
-      date: film.release_date,
-      poster: film.poster_path,
-      overview: film.overview,
-      id: film.id,
-      rating: film.rating,
-      avgRating: film.vote_average,
-      filmGenres: film.genre_ids,
-    };
-  }
 
   stateError = () => {
     if (!window.navigator.onLine) {
@@ -129,17 +118,31 @@ export default class App extends React.Component {
     }
   };
 
+  // eslint-disable-next-line class-methods-use-this
+  createFilmData(film) {
+    return {
+      title: film.title,
+      date: film.release_date,
+      poster: film.poster_path,
+      overview: film.overview,
+      id: film.id,
+      rating: film.rating,
+      avgRating: film.vote_average,
+      filmGenres: film.genre_ids,
+    };
+  }
+
   render() {
     const { films, loading, error, connection, totalPages, noResults, currentTab, ratedFilms, ratedPages } = this.state;
     const pageIsReady = !(loading || error || !connection);
 
     const search = pageIsReady ? <SearchBar onSearchChange={this.onSearchChange} results={noResults} /> : null;
     const loadingIndicator = loading ? <Spin /> : null;
-    const errorMessage = error ? <ErrorMessage message={'Oooops...Something`s gone wrong :('} /> : null;
-    const offline = !connection ? <ErrorMessage message={'Sorry! Lost internet connection :('} /> : null;
-    const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb._posterBase} /> : null;
+    const errorMessage = error ? <ErrorMessage message="Oooops...Something`s gone wrong :(" /> : null;
+    const offline = !connection ? <ErrorMessage message="Sorry! Lost internet connection :(" /> : null;
+    const filmList = pageIsReady ? <FilmList filmsData={films} posterBase={this.moviedb.posterBase} /> : null;
     const ratedFilmsList = pageIsReady ? (
-      <FilmList filmsData={ratedFilms} posterBase={this.moviedb._posterBase} loading={loading} />
+      <FilmList filmsData={ratedFilms} posterBase={this.moviedb.posterBase} loading={loading} />
     ) : null;
     const pagination = pageIsReady ? (
       <PagePagination totalFilms={totalPages * 20} onPageChange={this.requestFilms} />
@@ -187,7 +190,7 @@ export default class App extends React.Component {
               activeKey={currentTab}
               onChange={(tab) => this.onTabChange(tab)}
               items={items}
-              centered={true}
+              centered
             />
           </section>
         </MoviedbProvider>
